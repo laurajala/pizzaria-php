@@ -1,7 +1,7 @@
 <?php
 
-include_once("templates/header.php");
-include_once("process/pizza.php");
+include_once("Header.php");
+include_once("pizza.php");
 
 ?>
 
@@ -18,7 +18,7 @@ include_once("process/pizza.php");
         <h2>Monte sua pizza</h2>
 
         <form
-          action="process/pizza.php"
+          action="pizza.php"
           method="POST"
           id="pizza-form"
         >
@@ -118,6 +118,7 @@ include_once("process/pizza.php");
               type="submit"
               class="btn btn-primary"
             >
+              <i class="fas fa-shopping-cart"></i>
               Fazer Pedido
             </button>
 
@@ -131,4 +132,4 @@ include_once("process/pizza.php");
   </div>
 </main>
 
-<?php include_once("templates/footer.php"); ?>
+<?php include_once("footer.php"); ?>
