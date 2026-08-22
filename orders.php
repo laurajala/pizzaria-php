@@ -1,92 +1,176 @@
 <?php
 
+session_start();
+
 include_once("conn.php");
 
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
 
-  $pedidos = $conn->query("SELECT * FROM pedidos")->fetchAll(PDO::FETCH_ASSOC);
-
-  $pizzas = [];
-
-  foreach ($pedidos as $pedido) {
-
-    $pizzaId = $pedido["pizza_id"];
-
-    $pizzaQuery = $conn->prepare("SELECT * FROM pizzas WHERE id = :id");
-    $pizzaQuery->bindParam(":id", $pizzaId, PDO::PARAM_INT);
-    $pizzaQuery->execute();
-    $pizzaData = $pizzaQuery->fetch(PDO::FETCH_ASSOC);
-
-    $bordaQuery = $conn->prepare("SELECT tipo FROM bordas WHERE id = :id");
-    $bordaQuery->bindParam(":id", $pizzaData["borda_id"], PDO::PARAM_INT);
-    $bordaQuery->execute();
-    $borda = $bordaQuery->fetchColumn();
-
-    $massaQuery = $conn->prepare("SELECT tipo FROM massas WHERE id = :id");
-    $massaQuery->bindParam(":id", $pizzaData["massa_id"], PDO::PARAM_INT);
-    $massaQuery->execute();
-    $massa = $massaQuery->fetchColumn();
-
-    $saboresQuery = $conn->prepare("
-      SELECT s.nome 
-      FROM pizza_sabor ps
-      JOIN sabores s ON s.id = ps.sabor_id
-      WHERE ps.pizza_id = :pizza_id
+    $stmt = $conn->query("
+        SELECT
+            p.id AS pedido_id,
+            p.pizza_id,
+            p.status_id,
+            b.tipo AS borda,
+            m.tipo AS massa,
+            s.nome AS sabor
+        FROM pedidos p
+        INNER JOIN pizzas pi
+            ON pi.id = p.pizza_id
+        INNER JOIN bordas b
+            ON b.id = pi.borda_id
+        INNER JOIN massas m
+            ON m.id = pi.massa_id
+        LEFT JOIN pizza_sabor ps
+            ON ps.pizza_id = pi.id
+        LEFT JOIN sabores s
+            ON s.id = ps.sabor_id
+        ORDER BY p.id DESC
     ");
 
-    $saboresQuery->bindParam(":pizza_id", $pizzaId, PDO::PARAM_INT);
-    $saboresQuery->execute();
-    $sabores = $saboresQuery->fetchAll(PDO::FETCH_COLUMN);
+    $resultados = $stmt->fetchAll();
 
-    $pizzas[] = [
-      "id" => $pizzaId,
-      "borda" => $borda,
-      "massa" => $massa,
-      "sabores" => $sabores,
-      "status" => $pedido["status_id"]
-    ];
-  }
+    $pizzas = [];
 
-  $status = $conn->query("SELECT * FROM status")->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($resultados as $linha) {
+
+        $pizzaId = (int) $linha["pizza_id"];
+
+        if (!isset($pizzas[$pizzaId])) {
+
+            $pizzas[$pizzaId] = [
+                "id" => $pizzaId,
+                "pedido_id" => (int) $linha["pedido_id"],
+                "borda" => $linha["borda"],
+                "massa" => $linha["massa"],
+                "sabores" => [],
+                "status" => (int) $linha["status_id"]
+            ];
+        }
+
+        if (!empty($linha["sabor"])) {
+            $pizzas[$pizzaId]["sabores"][] = $linha["sabor"];
+        }
+    }
+
+    $pizzas = array_values($pizzas);
+
+    $status = $conn
+        ->query("SELECT * FROM status")
+        ->fetchAll();
 }
 
 if ($method === "POST") {
 
-  $type = $_POST["type"] ?? null;
+    $type = $_POST["type"] ?? null;
 
-  if ($type === "delete") {
+    $id = filter_input(
+        INPUT_POST,
+        "id",
+        FILTER_VALIDATE_INT
+    );
 
-    $id = $_POST["id"];
+    if (!$id) {
 
-    $stmt = $conn->prepare("DELETE FROM pedidos WHERE pizza_id = :id");
-    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-    $stmt->execute();
+        $_SESSION["msg"] = "Pedido inválido.";
+        $_SESSION["status"] = "danger";
 
-    $_SESSION["msg"] = "Pedido removido com sucesso!";
-    $_SESSION["status"] = "success";
-  }
+        header("Location: dashboard.php");
+        exit;
+    }
 
-  if ($type === "update") {
+    if ($type === "delete") {
 
-    $id = $_POST["id"];
-    $statusId = $_POST["status"];
+        try {
 
-    $stmt = $conn->prepare("
-      UPDATE pedidos 
-      SET status_id = :status 
-      WHERE pizza_id = :id
-    ");
+            $conn->beginTransaction();
 
-    $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-    $stmt->bindParam(":status", $statusId, PDO::PARAM_INT);
-    $stmt->execute();
+            $stmt = $conn->prepare("
+                DELETE FROM pedidos
+                WHERE pizza_id = :id
+            ");
 
-    $_SESSION["msg"] = "Pedido atualizado com sucesso!";
-    $_SESSION["status"] = "success";
-  }
+            $stmt->execute([
+                ":id" => $id
+            ]);
 
-  header("Location: ../dashboard.php");
-  exit;
+            $stmt = $conn->prepare("
+                DELETE FROM pizza_sabor
+                WHERE pizza_id = :id
+            ");
+
+            $stmt->execute([
+                ":id" => $id
+            ]);
+
+            $stmt = $conn->prepare("
+                DELETE FROM pizzas
+                WHERE id = :id
+            ");
+
+            $stmt->execute([
+                ":id" => $id
+            ]);
+
+            $conn->commit();
+
+            $_SESSION["msg"] = "Pedido removido com sucesso!";
+            $_SESSION["status"] = "success";
+
+        } catch (PDOException $e) {
+
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+
+            error_log(
+                "Erro ao remover pedido: "
+                . $e->getMessage()
+            );
+
+            $_SESSION["msg"] =
+                "Não foi possível remover o pedido.";
+
+            $_SESSION["status"] = "danger";
+        }
+    }
+
+    if ($type === "update") {
+
+        $statusId = filter_input(
+            INPUT_POST,
+            "status",
+            FILTER_VALIDATE_INT
+        );
+
+        if (!$statusId) {
+
+            $_SESSION["msg"] = "Status inválido.";
+            $_SESSION["status"] = "warning";
+
+            header("Location: dashboard.php");
+            exit;
+        }
+
+        $stmt = $conn->prepare("
+            UPDATE pedidos
+            SET status_id = :status
+            WHERE pizza_id = :id
+        ");
+
+        $stmt->execute([
+            ":status" => $statusId,
+            ":id" => $id
+        ]);
+
+        $_SESSION["msg"] =
+            "Pedido atualizado com sucesso!";
+
+        $_SESSION["status"] = "success";
+    }
+
+    header("Location: dashboard.php");
+    exit;
 }
