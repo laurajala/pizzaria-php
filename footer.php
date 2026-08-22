@@ -1,5 +1,13 @@
-<footer>
-  <p>Pizzaria do João © <?= date("Y") ?></p>
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      🍕 Pizzaria do João &copy; <?= date("Y") ?>
+    </p>
+
+    <small>
+      Sistema de pedidos desenvolvido em PHP
+    </small>
+  </div>
 </footer>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
