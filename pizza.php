@@ -1,66 +1,122 @@
 <?php
 
+session_start();
+
 include_once("conn.php");
 
 $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
 
-  $bordas = $conn->query("SELECT * FROM bordas")->fetchAll(PDO::FETCH_ASSOC);
-  $massas = $conn->query("SELECT * FROM massas")->fetchAll(PDO::FETCH_ASSOC);
-  $sabores = $conn->query("SELECT * FROM sabores")->fetchAll(PDO::FETCH_ASSOC);
+    $bordas = $conn
+        ->query("SELECT * FROM bordas")
+        ->fetchAll();
+
+    $massas = $conn
+        ->query("SELECT * FROM massas")
+        ->fetchAll();
+
+    $sabores = $conn
+        ->query("SELECT * FROM sabores")
+        ->fetchAll();
 
 } elseif ($method === "POST") {
 
-  $borda = $_POST["borda"] ?? null;
-  $massa = $_POST["massa"] ?? null;
-  $sabores = $_POST["sabores"] ?? [];
+    $borda = filter_input(INPUT_POST, "borda", FILTER_VALIDATE_INT);
+    $massa = filter_input(INPUT_POST, "massa", FILTER_VALIDATE_INT);
 
-  if (count($sabores) > 3) {
+    $sabores = $_POST["sabores"] ?? [];
 
-    $_SESSION["msg"] = "Selecione no máximo 3 sabores!";
-    $_SESSION["status"] = "warning";
+    if (!$borda || !$massa) {
 
-    header("Location: ../index.php");
+        $_SESSION["msg"] = "Selecione a borda e a massa da pizza.";
+        $_SESSION["status"] = "warning";
+
+        header("Location: index.php");
+        exit;
+    }
+
+    if (!is_array($sabores) || empty($sabores)) {
+
+        $_SESSION["msg"] = "Selecione pelo menos um sabor.";
+        $_SESSION["status"] = "warning";
+
+        header("Location: index.php");
+        exit;
+    }
+
+    if (count($sabores) > 3) {
+
+        $_SESSION["msg"] = "Selecione no máximo 3 sabores.";
+        $_SESSION["status"] = "warning";
+
+        header("Location: index.php");
+        exit;
+    }
+
+    $sabores = array_map("intval", $sabores);
+
+    try {
+
+        $conn->beginTransaction();
+
+        // Criação da pizza
+        $stmt = $conn->prepare("
+            INSERT INTO pizzas (borda_id, massa_id)
+            VALUES (:borda, :massa)
+        ");
+
+        $stmt->execute([
+            ":borda" => $borda,
+            ":massa" => $massa
+        ]);
+
+        $pizzaId = (int) $conn->lastInsertId();
+
+        // Associação dos sabores
+        $stmtSabor = $conn->prepare("
+            INSERT INTO pizza_sabor (pizza_id, sabor_id)
+            VALUES (:pizza, :sabor)
+        ");
+
+        foreach ($sabores as $sabor) {
+
+            $stmtSabor->execute([
+                ":pizza" => $pizzaId,
+                ":sabor" => $sabor
+            ]);
+        }
+
+        // Status inicial do pedido
+        $statusId = 1;
+
+        $stmtPedido = $conn->prepare("
+            INSERT INTO pedidos (pizza_id, status_id)
+            VALUES (:pizza, :status)
+        ");
+
+        $stmtPedido->execute([
+            ":pizza" => $pizzaId,
+            ":status" => $statusId
+        ]);
+
+        $conn->commit();
+
+        $_SESSION["msg"] = "Pedido realizado com sucesso!";
+        $_SESSION["status"] = "success";
+
+    } catch (PDOException $e) {
+
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+
+        error_log("Erro ao realizar pedido: " . $e->getMessage());
+
+        $_SESSION["msg"] = "Não foi possível realizar o pedido.";
+        $_SESSION["status"] = "danger";
+    }
+
+    header("Location: index.php");
     exit;
-  }
-
-  $stmt = $conn->prepare("
-    INSERT INTO pizzas (borda_id, massa_id)
-    VALUES (:borda, :massa)
-  ");
-
-  $stmt->bindParam(":borda", $borda, PDO::PARAM_INT);
-  $stmt->bindParam(":massa", $massa, PDO::PARAM_INT);
-  $stmt->execute();
-
-  $pizzaId = $conn->lastInsertId();
-
-  $stmt = $conn->prepare("
-    INSERT INTO pizza_sabor (pizza_id, sabor_id)
-    VALUES (:pizza, :sabor)
-  ");
-
-  foreach ($sabores as $sabor) {
-    $stmt->bindParam(":pizza", $pizzaId, PDO::PARAM_INT);
-    $stmt->bindParam(":sabor", $sabor, PDO::PARAM_INT);
-    $stmt->execute();
-  }
-
-  $statusId = 1;
-
-  $stmt = $conn->prepare("
-    INSERT INTO pedidos (pizza_id, status_id)
-    VALUES (:pizza, :status)
-  ");
-
-  $stmt->bindParam(":pizza", $pizzaId, PDO::PARAM_INT);
-  $stmt->bindParam(":status", $statusId, PDO::PARAM_INT);
-  $stmt->execute();
-
-  $_SESSION["msg"] = "Pedido realizado com sucesso!";
-  $_SESSION["status"] = "success";
-
-  header("Location: ../index.php");
-  exit;
 }
