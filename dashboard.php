@@ -1,9 +1,11 @@
 <?php
-include_once("templates/header.php");
-include_once("process/orders.php");
+
+include_once("Header.php");
+include_once("orders.php");
+
 ?>
 
-<div id="main-container">
+<main id="main-container">
   <div class="container">
     <div class="row">
 
@@ -12,74 +14,162 @@ include_once("process/orders.php");
       </div>
 
       <div class="col-md-12 table-container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Pedido #</th>
-              <th>Borda</th>
-              <th>Massa</th>
-              <th>Sabores</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            <?php foreach ($pizzas as $pizza): ?>
-              <tr>
-                <td><?= $pizza["id"] ?></td>
-                <td><?= $pizza["borda"] ?></td>
-                <td><?= $pizza["massa"] ?></td>
+        <?php if (empty($pizzas)): ?>
 
-                <td>
-                  <ul>
-                    <?php foreach ($pizza["sabores"] as $sabor): ?>
-                      <li><?= $sabor ?></li>
-                    <?php endforeach; ?>
-                  </ul>
-                </td>
+          <div class="alert alert-info">
+            Nenhum pedido encontrado.
+          </div>
 
-                <td>
-                  <form action="process/orders.php" method="POST" class="form-group update-form">
+        <?php else: ?>
 
-                    <input type="hidden" name="type" value="update">
-                    <input type="hidden" name="id" value="<?= $pizza["id"] ?>">
+          <div class="table-responsive">
 
-                    <select name="status" class="form-control status-input">
-                      <?php foreach ($status as $s): ?>
-                        <option value="<?= $s["id"] ?>" <?= ($s["id"] == $pizza["status"]) ? "selected" : "" ?>>
-                          <?= $s["tipo"] ?>
-                        </option>
-                      <?php endforeach; ?>
-                    </select>
+            <table class="table">
 
-                    <button type="submit" class="update-btn">
-                      <i class="fas fa-sync-alt"></i>
-                    </button>
+              <thead>
+                <tr>
+                  <th>Pedido #</th>
+                  <th>Borda</th>
+                  <th>Massa</th>
+                  <th>Sabores</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
 
-                  </form>
-                </td>
+              <tbody>
 
-                <td>
-                  <form action="process/orders.php" method="POST">
-                    <input type="hidden" name="type" value="delete">
-                    <input type="hidden" name="id" value="<?= $pizza["id"] ?>">
+                <?php foreach ($pizzas as $pizza): ?>
 
-                    <button type="submit" class="delete-btn">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </form>
-                </td>
+                  <tr>
 
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
+                    <td>
+                      <?= (int) $pizza["pedido_id"] ?>
+                    </td>
 
-        </table>
+                    <td>
+                      <?= htmlspecialchars($pizza["borda"]) ?>
+                    </td>
+
+                    <td>
+                      <?= htmlspecialchars($pizza["massa"]) ?>
+                    </td>
+
+                    <td>
+                      <ul class="mb-0">
+
+                        <?php foreach ($pizza["sabores"] as $sabor): ?>
+
+                          <li>
+                            <?= htmlspecialchars($sabor) ?>
+                          </li>
+
+                        <?php endforeach; ?>
+
+                      </ul>
+                    </td>
+
+                    <td>
+
+                      <form
+                        action="orders.php"
+                        method="POST"
+                        class="form-group update-form"
+                      >
+
+                        <input
+                          type="hidden"
+                          name="type"
+                          value="update"
+                        >
+
+                        <input
+                          type="hidden"
+                          name="id"
+                          value="<?= (int) $pizza["id"] ?>"
+                        >
+
+                        <select
+                          name="status"
+                          class="form-control status-input"
+                        >
+
+                          <?php foreach ($status as $s): ?>
+
+                            <option
+                              value="<?= (int) $s["id"] ?>"
+                              <?= ((int) $s["id"] === (int) $pizza["status"]) ? "selected" : "" ?>
+                            >
+                              <?= htmlspecialchars($s["tipo"]) ?>
+                            </option>
+
+                          <?php endforeach; ?>
+
+                        </select>
+
+                        <button
+                          type="submit"
+                          class="update-btn"
+                          title="Atualizar status"
+                          aria-label="Atualizar status do pedido"
+                        >
+                          <i class="fas fa-sync-alt"></i>
+                        </button>
+
+                      </form>
+
+                    </td>
+
+                    <td>
+
+                      <form
+                        action="orders.php"
+                        method="POST"
+                        onsubmit="return confirm('Deseja realmente remover este pedido?');"
+                      >
+
+                        <input
+                          type="hidden"
+                          name="type"
+                          value="delete"
+                        >
+
+                        <input
+                          type="hidden"
+                          name="id"
+                          value="<?= (int) $pizza["id"] ?>"
+                        >
+
+                        <button
+                          type="submit"
+                          class="delete-btn"
+                          title="Excluir pedido"
+                          aria-label="Excluir pedido"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+
+                      </form>
+
+                    </td>
+
+                  </tr>
+
+                <?php endforeach; ?>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        <?php endif; ?>
+
       </div>
 
     </div>
   </div>
-</div>
+</main>
 
-<?php include_once("templates/footer.php"); ?>
+<?php include_once("footer.php"); ?>
