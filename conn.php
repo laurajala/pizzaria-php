@@ -1,21 +1,30 @@
 <?php
 
-$host = "localhost";
-$db = "pizzaria";
-$user = "root";
-$pass = "";
+$host = 'localhost';
+$dbname = 'pizzaria';
+$username = 'root';
+$password = '';
+
+$dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
+
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
 
 try {
+
     $conn = new PDO(
-        "mysql:host={$host};dbname={$db};charset=utf8",
-        $user,
-        $pass
+        $dsn,
+        $username,
+        $password,
+        $options
     );
 
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-
 } catch (PDOException $e) {
-    error_log("Erro de conexão: " . $e->getMessage());
-    die("Erro ao conectar com o banco de dados.");
+
+    error_log('Erro de conexão com o banco: ' . $e->getMessage());
+
+    die('Não foi possível conectar ao banco de dados.');
 }
