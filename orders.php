@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 include_once("conn.php");
 
@@ -8,6 +10,10 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 if ($method === "GET") {
 
+    /*
+     * Consulta os pedidos com informações
+     * de pizza, borda, massa e sabores.
+     */
     $stmt = $conn->query("
         SELECT
             p.id AS pedido_id,
@@ -34,6 +40,10 @@ if ($method === "GET") {
 
     $pizzas = [];
 
+    /*
+     * Agrupa os sabores pertencentes
+     * à mesma pizza.
+     */
     foreach ($resultados as $linha) {
 
         $pizzaId = (int) $linha["pizza_id"];
@@ -57,12 +67,14 @@ if ($method === "GET") {
 
     $pizzas = array_values($pizzas);
 
+    /*
+     * Carrega os status disponíveis.
+     */
     $status = $conn
         ->query("SELECT * FROM status")
         ->fetchAll();
-}
 
-if ($method === "POST") {
+} elseif ($method === "POST") {
 
     $type = $_POST["type"] ?? null;
 
@@ -72,6 +84,9 @@ if ($method === "POST") {
         FILTER_VALIDATE_INT
     );
 
+    /*
+     * Validação do pedido.
+     */
     if (!$id) {
 
         $_SESSION["msg"] = "Pedido inválido.";
@@ -81,42 +96,50 @@ if ($method === "POST") {
         exit;
     }
 
+    /*
+     * Exclusão do pedido.
+     */
     if ($type === "delete") {
 
         try {
 
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("
+            // Remove o pedido
+            $stmtPedido = $conn->prepare("
                 DELETE FROM pedidos
                 WHERE pizza_id = :id
             ");
 
-            $stmt->execute([
+            $stmtPedido->execute([
                 ":id" => $id
             ]);
 
-            $stmt = $conn->prepare("
+            // Remove os sabores associados
+            $stmtSabores = $conn->prepare("
                 DELETE FROM pizza_sabor
                 WHERE pizza_id = :id
             ");
 
-            $stmt->execute([
+            $stmtSabores->execute([
                 ":id" => $id
             ]);
 
-            $stmt = $conn->prepare("
+            // Remove a pizza
+            $stmtPizza = $conn->prepare("
                 DELETE FROM pizzas
                 WHERE id = :id
             ");
 
-            $stmt->execute([
+            $stmtPizza->execute([
                 ":id" => $id
             ]);
 
             $conn->commit();
 
-            $_SESSION["msg"] = "Pedido removido com sucesso!";
+            $_SESSION["msg"] =
+                "Pedido removido com sucesso!";
+
             $_SESSION["status"] = "success";
 
         } catch (PDOException $e) {
@@ -135,8 +158,14 @@ if ($method === "POST") {
 
             $_SESSION["status"] = "danger";
         }
+
+        header("Location: dashboard.php");
+        exit;
     }
 
+    /*
+     * Atualização do status.
+     */
     if ($type === "update") {
 
         $statusId = filter_input(
@@ -154,22 +183,48 @@ if ($method === "POST") {
             exit;
         }
 
-        $stmt = $conn->prepare("
-            UPDATE pedidos
-            SET status_id = :status
-            WHERE pizza_id = :id
-        ");
+        try {
 
-        $stmt->execute([
-            ":status" => $statusId,
-            ":id" => $id
-        ]);
+            $stmt = $conn->prepare("
+                UPDATE pedidos
+                SET status_id = :status
+                WHERE pizza_id = :id
+            ");
 
-        $_SESSION["msg"] =
-            "Pedido atualizado com sucesso!";
+            $stmt->execute([
+                ":status" => $statusId,
+                ":id" => $id
+            ]);
 
-        $_SESSION["status"] = "success";
+            $_SESSION["msg"] =
+                "Pedido atualizado com sucesso!";
+
+            $_SESSION["status"] = "success";
+
+        } catch (PDOException $e) {
+
+            error_log(
+                "Erro ao atualizar pedido: "
+                . $e->getMessage()
+            );
+
+            $_SESSION["msg"] =
+                "Não foi possível atualizar o pedido.";
+
+            $_SESSION["status"] = "danger";
+        }
+
+        header("Location: dashboard.php");
+        exit;
     }
+
+    /*
+     * Tipo de operação não reconhecido.
+     */
+    $_SESSION["msg"] =
+        "Operação inválida.";
+
+    $_SESSION["status"] = "warning";
 
     header("Location: dashboard.php");
     exit;
