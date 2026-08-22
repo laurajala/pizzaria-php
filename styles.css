@@ -1,198 +1,421 @@
-html, body {
-  height: 100%;
+:root {
+  
+  --primary: #c0392b;
+  --primary-dark: #962d22;
+  --secondary: #f4b942;
+  --dark: #1f2328;
+  --text: #343a40;
+  --muted: #6c757d;
+  --background: #f8f9fa;
+  --surface: #ffffff;
+  --border: #dee2e6;
+  --success: #198754;
+  --warning: #856404;
+  --danger: #dc3545;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* NAVBAR */
-#brand-logo {
-  width: 50px;
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
 }
+
+/* =========================
+   NAVBAR
+========================= */
 
 .navbar.navbar-expand-lg {
-  background-color: #c6b4cd;
-  font-weight: bold;
+  background-color: var(--dark) !important;
+  padding: 14px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.navbar.navbar-expand-lg a {
-  color: #fff;
+.navbar-brand {
+  font-size: 1.35rem;
+  font-weight: 700;
 }
 
-/* HOME */
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .active > .nav-link {
+  color: var(--secondary);
+}
+
+/* =========================
+   BANNER
+========================= */
+
 #main-banner {
-  background-image: url("../img/pizza-banner.jpg");
-  height: 300px;
+  min-height: 320px;
   width: 100%;
-  background-position: center;
-  background-size: cover;
-  background-position-y: -300px;
-
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 40px 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(150, 45, 34, 0.95),
+      rgba(192, 57, 43, 0.9)
+    );
 }
 
 #main-banner h1 {
-  color: #fff;
-  background-color: #000;
+  margin: 0;
+  padding: 24px 40px;
+  max-width: 700px;
+
+  color: #ffffff;
   text-align: center;
-  padding: 30px;
   text-transform: uppercase;
-  width: 550px;
-  font-size: 50px;
+
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
+/* =========================
+   CONTEÚDO PRINCIPAL
+========================= */
+
 #main-container {
-  margin-bottom: 100px;
-  padding: 50px 0;
-  text-align: center;
-  min-height: 50%;
+  flex: 1;
+  width: 100%;
+  padding: 60px 0;
 }
 
 #main-container h2 {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
+  color: var(--dark);
+  text-align: center;
+  font-weight: 700;
 }
 
 .row {
-  margin: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
-/* FORM */
+/* =========================
+   FORMULÁRIO DA PIZZA
+========================= */
+
 #pizza-form {
-  max-width: 550px;
+  max-width: 620px;
   margin: 0 auto;
+  padding: 32px;
+
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
   text-align: left;
 }
 
-#pizza-form label {
-  font-weight: bold;
+#pizza-form .form-group {
+  margin-bottom: 24px;
 }
+
+#pizza-form label {
+  display: block;
+  margin-bottom: 8px;
+
+  color: var(--dark);
+  font-weight: 700;
+}
+
+#pizza-form small {
+  color: var(--muted);
+}
+
+.form-control {
+  min-height: 46px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(192, 57, 43, 0.15);
+}
+
+select[multiple].form-control {
+  min-height: 150px;
+}
+
+/* =========================
+   BOTÕES
+========================= */
 
 .btn.btn-primary {
-  background-color: #000;
-  border-color: #000;
+  min-height: 48px;
+  padding: 10px 24px;
+
+  background-color: var(--primary);
+  border-color: var(--primary);
+
+  font-weight: 700;
+  border-radius: 8px;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.1s ease;
 }
 
-/* ALERTA */
+.btn.btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   ALERTAS
+========================= */
+
 .alert {
-  border-radius: 0;
-  text-align: center;
   margin-bottom: 0;
-  font-weight: bold;
-  padding: 20px;
-  font-size: 18px;
+  border-radius: 8px;
+
+  text-align: center;
+  font-weight: 600;
 }
 
-.alert.alert-success {
-  border: 2px solid #155724;
+.alert-success {
+  border-color: var(--success);
 }
 
-.alert.alert-warning {
-  border: 2px solid #856404;
+.alert-warning {
+  border-color: var(--warning);
 }
 
-.alert p {
+.alert-danger {
+  border-color: var(--danger);
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.table-container {
+  padding: 0;
+}
+
+.table-responsive {
+  overflow-x: auto;
+
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table thead th {
+  border-top: none;
+  border-bottom: 2px solid var(--border);
+
+  background-color: #f1f3f5;
+  color: var(--dark);
+
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.table ul {
   margin: 0;
-}
-
-/* DASHBOARD */
-.delete-btn,
-.update-btn {
-  border: none;
-  background: transparent;
-}
-
-.delete-btn {
-  padding-top: 10px;
-}
-
-.delete-btn i {
-  color: #721c24;
-  font-size: 20px;
-}
-
-.update-btn {
-  margin-left: 10px;
-}
-
-.update-btn i {
-  color: #004085;
+  padding-left: 20px;
+  text-align: left;
 }
 
 .update-form {
   display: flex;
-  flex-direction: row;
   align-items: center;
+  gap: 8px;
+
+  margin: 0;
 }
 
 .status-input {
-  width: 65%;
+  min-width: 145px;
 }
 
-.table ul {
-  text-align: left;
-}
-
-/* FOOTER */
-footer {
-  position: relative;
-  width: 100%;
-  height: 175px;
-  background-color: #000;
-  color: #fff;
-
-  display: flex;
+.delete-btn,
+.update-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  font-weight: bold;
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+
+  background-color: transparent;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }
 
-/* RESPONSIVO */
-@media (max-width: 425px) {
+.delete-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.update-btn:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.delete-btn:active,
+.update-btn:active {
+  transform: scale(0.95);
+}
+
+.delete-btn i {
+  color: var(--danger);
+  font-size: 18px;
+}
+
+.update-btn i {
+  color: #0d6efd;
+  font-size: 17px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.site-footer {
+  width: 100%;
+  margin-top: auto;
+  padding: 35px 20px;
+
+  background-color: var(--dark);
+  color: #ffffff;
+
+  text-align: center;
+}
+
+.site-footer p {
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.site-footer small {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 768px) {
 
   #main-banner {
-    background-position-y: 0;
+    min-height: 240px;
   }
 
   #main-banner h1 {
-    padding: 10px;
-    width: auto;
-    font-size: 32px;
+    padding: 20px;
+    font-size: 2.2rem;
   }
 
   #main-container {
-    margin-bottom: 0;
+    padding: 40px 0;
+  }
+
+  #pizza-form {
+    padding: 24px;
+  }
+
+  .update-form {
+    min-width: 190px;
+  }
+}
+
+@media (max-width: 425px) {
+
+  #main-banner {
+    min-height: 200px;
+  }
+
+  #main-banner h1 {
+    width: 100%;
+    padding: 16px;
+
+    font-size: 1.7rem;
+  }
+
+  #main-container {
+    padding: 30px 0;
   }
 
   #main-container .container {
-    padding: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
-  .form-group .btn.btn-primary {
+  #pizza-form {
+    padding: 20px;
+  }
+
+  .btn.btn-primary {
     width: 100%;
-    height: 50px;
-    margin-top: 15px;
-    text-transform: uppercase;
-  }
-
-  .table-container {
-    padding: 0;
   }
 
   .table td,
   .table th {
-    padding: 0.5rem;
+    padding: 0.65rem;
+    font-size: 0.9rem;
   }
 
-  th span {
-    display: none;
-  }
-
-  .table thead th:nth-child(5),
-  .table thead th:nth-child(6),
-  .table tbody td:nth-child(5),
-  .table tbody td:nth-child(6) {
-    display: none;
+  .site-footer {
+    padding: 25px 15px;
   }
 }
